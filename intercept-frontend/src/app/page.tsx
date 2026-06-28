@@ -114,7 +114,7 @@ export default function Home() {
   const connectWebSocket = useCallback(function connect() {
     if (socket.current?.readyState === WebSocket.OPEN || isConnectingRef.current) return;
     isConnectingRef.current = true;
-    socket.current = new WebSocket("ws://localhost:8000/ws/stream?token=intercept_secure_token");
+    socket.current = new WebSocket(process.env.NEXT_PUBLIC_WS_URL || "wss://intercept-backend-qyew.onrender.com/ws/stream?token=intercept_secure_token");
 
     socket.current.onopen = () => {
       isConnectingRef.current = false;
