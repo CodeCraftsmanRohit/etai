@@ -1,0 +1,481 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Intercept | Audio Overview & Interactive Briefing</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap');
+        
+        body {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            background-color: #fafafa;
+            color: #18181b;
+        }
+
+        .chart-container {
+            position: relative;
+            width: 100%;
+            max-width: 700px;
+            margin-left: auto;
+            margin-right: auto;
+            height: 350px;
+            max-height: 400px;
+        }
+
+        .glass-card {
+            background: rgba(255, 255, 255, 0.8);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(228, 228, 231, 0.6);
+            border-radius: 24px;
+        }
+
+        .audio-wave {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            height: 40px;
+        }
+
+        .wave-bar {
+            width: 4px;
+            height: 20%;
+            background: #4f46e5;
+            border-radius: 2px;
+            transition: height 0.2s ease;
+        }
+
+        .playing .wave-bar {
+            animation: wave 1.2s infinite ease-in-out;
+        }
+
+        @keyframes wave {
+            0%, 100% { height: 20%; }
+            50% { height: 100%; }
+        }
+
+        .strobe-alert {
+            animation: alert-pulse 1.5s infinite;
+        }
+
+        @keyframes alert-pulse {
+            0% { background-color: rgba(239, 68, 68, 0.1); border-color: #ef4444; }
+            50% { background-color: rgba(239, 68, 68, 0.4); border-color: #b91c1c; }
+            100% { background-color: rgba(239, 68, 68, 0.1); border-color: #ef4444; }
+        }
+
+        .scroll-hide::-webkit-scrollbar { display: none; }
+        
+        .sync-active {
+            border-color: #4f46e5;
+            box-shadow: 0 0 15px rgba(79, 70, 229, 0.2);
+        }
+    </style>
+</head>
+<body class="antialiased">
+
+    <!-- Navigation -->
+    <nav class="fixed top-0 w-full z-50 px-6 py-4">
+        <div class="max-w-7xl mx-auto flex justify-between items-center glass-card px-6 py-3">
+            <div class="flex items-center gap-2">
+                <div class="w-8 h-8 bg-indigo-600 rounded-lg flex items-center justify-center text-white font-bold">I</div>
+                <span class="font-bold tracking-tight text-xl">INTERCEPT</span>
+            </div>
+            <div class="hidden md:flex gap-8 font-medium text-sm text-zinc-500">
+                <a href="#briefing" class="hover:text-indigo-600 transition-colors">The Problem</a>
+                <a href="#simulation" class="hover:text-indigo-600 transition-colors">Live Sync</a>
+                <a href="#tech" class="hover:text-indigo-600 transition-colors">Architecture</a>
+                <a href="#roadmap" class="hover:text-indigo-600 transition-colors">Roadmap</a>
+            </div>
+            <div class="flex items-center gap-4">
+                <select id="voiceSelect" class="text-xs bg-transparent border-none font-medium text-zinc-500 cursor-pointer focus:ring-0">
+                    <option value="">Default Voice</option>
+                </select>
+                <button class="bg-zinc-900 text-white px-5 py-2 rounded-full text-sm font-semibold hover:bg-indigo-600 transition-all">
+                    Download PRD
+                </button>
+            </div>
+        </div>
+    </nav>
+
+    <main class="pt-32 px-6 pb-20">
+        <!-- Hero Section -->
+        <section class="max-w-7xl mx-auto mb-20 text-center">
+            <h1 class="text-5xl md:text-7xl font-extrabold text-zinc-900 mb-6 tracking-tight">
+                Listen to the <span class="text-indigo-600">Future of Security.</span>
+            </h1>
+            <p class="text-xl text-zinc-600 max-w-3xl mx-auto mb-10 leading-relaxed">
+                We've built an AI Narration Engine directly into this report. Click play to begin the synchronized audio-visual briefing on the Intercept shield.
+            </p>
+            
+            <!-- Main Audio Control -->
+            <div id="audioInterface" class="glass-card max-w-2xl mx-auto p-8 flex flex-col items-center shadow-xl transition-all duration-500">
+                <div id="waveContainer" class="audio-wave mb-6">
+                    <!-- Bars injected by JS -->
+                </div>
+                <div class="flex items-center gap-6">
+                    <button id="playBtn" class="w-20 h-20 bg-indigo-600 rounded-full flex items-center justify-center text-white hover:scale-105 transition-transform shadow-lg shadow-indigo-200">
+                        <span id="playIcon" class="text-3xl ml-1">▶</span>
+                    </button>
+                    <div class="text-left">
+                        <p id="statusLabel" class="font-bold text-zinc-900 text-lg">System Ready</p>
+                        <p id="narrationSubtext" class="text-zinc-500 text-sm">Click to start the AI-Narrated Overview</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Section 1: The Briefing -->
+        <section id="briefing" class="max-w-7xl mx-auto py-20 border-t border-zinc-200">
+            <div class="grid md:grid-cols-2 gap-16 items-start">
+                <div id="contentBlock1" class="transition-all duration-700">
+                    <h2 class="text-3xl font-bold mb-6">The Strategic Briefing</h2>
+                    <p class="text-zinc-600 mb-8 leading-relaxed">
+                        Cybersecurity is failing because it focuses on metadata, not intent. Scammers use "Psychological Compliance" to trick victims into bypassing their own bank security. Intercept changes the game by listening to the <strong>intent</strong> of the call.
+                    </p>
+                    <div class="space-y-6">
+                        <div id="cardGap" class="p-6 glass-card border-l-4 border-indigo-600 transition-all">
+                            <h4 class="font-bold text-lg mb-2">The Vulnerability Gap</h4>
+                            <p class="text-zinc-500 text-sm">Most systems trigger *after* the wire transfer. Intercept works in the 60 seconds of high-pressure dialogue before the money moves.</p>
+                        </div>
+                    </div>
+                </div>
+                <div>
+                    <div class="chart-container glass-card p-6 shadow-sm">
+                        <canvas id="fraudScaleChart"></canvas>
+                    </div>
+                    <p class="text-center text-xs text-zinc-400 mt-4 italic">Source: Intercept Internal Research - Market Vulnerability Segments</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Section 2: Live Simulation -->
+        <section id="simulation" class="max-w-7xl mx-auto py-20 bg-zinc-900 rounded-[48px] p-12 text-white overflow-hidden relative">
+            <div class="relative z-10">
+                <div class="text-center mb-12">
+                    <span class="bg-indigo-600/20 text-indigo-400 px-4 py-1 rounded-full text-xs font-bold uppercase tracking-widest">Live Sync Experience</span>
+                    <h2 class="text-4xl font-bold mt-4 mb-4">Anatomy of an Interception</h2>
+                    <p class="text-zinc-400 max-w-2xl mx-auto">This simulation is synchronized with the audio briefing. Watch the transcript and risk scoring react to the detected threat markers.</p>
+                </div>
+
+                <div class="grid lg:grid-cols-3 gap-8">
+                    <!-- Transcription Stream -->
+                    <div class="lg:col-span-2 bg-black/40 rounded-3xl p-8 border border-white/10 flex flex-col h-[500px]">
+                        <div class="flex justify-between items-center mb-6">
+                            <h3 class="font-bold flex items-center gap-2">
+                                <span class="w-2 h-2 bg-green-500 rounded-full animate-pulse"></span>
+                                Live Transcript Pipeline
+                            </h3>
+                            <div class="text-xs text-zinc-500 font-mono">EN-US • WHISPER-V3</div>
+                        </div>
+                        <div id="transcriptBox" class="flex-grow overflow-y-auto space-y-4 pr-4 scroll-hide text-sm">
+                            <div class="text-zinc-500 italic">Audio narration will populate this stream...</div>
+                        </div>
+                    </div>
+
+                    <!-- Risk Scoring -->
+                    <div id="riskPanel" class="bg-zinc-800/50 rounded-3xl p-8 border border-white/10 flex flex-col justify-between transition-all duration-500">
+                        <div>
+                            <h3 class="font-bold mb-8">AI Intent Analysis</h3>
+                            <div class="relative flex items-center justify-center mb-10">
+                                <canvas id="riskGauge" width="200" height="200"></canvas>
+                                <div class="absolute text-center">
+                                    <span id="riskValueDisplay" class="text-5xl font-extrabold">0</span>
+                                    <p class="text-xs text-zinc-500 uppercase tracking-widest mt-1">Risk Score</p>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="space-y-4">
+                            <div class="flex justify-between text-xs font-bold uppercase text-zinc-500">
+                                <span>Threat Markers</span>
+                                <span id="threatStatus">Clear</span>
+                            </div>
+                            <div id="markerContainer" class="flex flex-wrap gap-2">
+                                <!-- Tags dynamically added -->
+                            </div>
+                        </div>
+
+                        <div id="lockdownAlert" class="hidden mt-8 p-4 rounded-xl border border-red-500 bg-red-500/20 text-red-500 font-bold text-center animate-bounce">
+                            SYSTEM LOCKDOWN TRIGGERED
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div id="bgGlow" class="absolute inset-0 bg-indigo-600/5 pointer-events-none"></div>
+        </section>
+
+        <!-- Section 3: Architecture -->
+        <section id="tech" class="max-w-7xl mx-auto py-20">
+            <div class="text-center mb-16">
+                <h2 class="text-3xl font-bold mb-4">The Invisible Architecture</h2>
+                <p class="text-zinc-600">Built for speed, privacy, and absolute reliability.</p>
+            </div>
+
+            <div class="grid md:grid-cols-3 gap-8">
+                <div class="glass-card p-8 shadow-sm">
+                    <div class="w-12 h-12 bg-indigo-100 text-indigo-600 rounded-2xl flex items-center justify-center mb-6 font-bold">1</div>
+                    <h4 class="text-xl font-bold mb-4">Audio Chunking</h4>
+                    <p class="text-zinc-500 text-sm leading-relaxed">Micro-captures of 3-second overlapping audio ensure zero-latency response times without sacrificing context.</p>
+                </div>
+                <div class="glass-card p-8 shadow-sm">
+                    <div class="w-12 h-12 bg-emerald-100 text-emerald-600 rounded-2xl flex items-center justify-center mb-6 font-bold">2</div>
+                    <h4 class="text-xl font-bold mb-4">FastAPI Pipeline</h4>
+                    <p class="text-zinc-500 text-sm leading-relaxed">High-concurrency WebSockets orchestrate raw byte streams to OpenAI Whisper and GPT-4o simultaneously.</p>
+                </div>
+                <div class="glass-card p-8 shadow-sm">
+                    <div class="w-12 h-12 bg-amber-100 text-amber-600 rounded-2xl flex items-center justify-center mb-6 font-bold">3</div>
+                    <h4 class="text-xl font-bold mb-4">Deterministic Output</h4>
+                    <p class="text-zinc-500 text-sm leading-relaxed">Strictly typed JSON allows the UI to react instantly to intent scores without ambiguity or delay.</p>
+                </div>
+            </div>
+
+            <div class="mt-12 chart-container">
+                <canvas id="latencyChart"></canvas>
+            </div>
+            <p class="text-center text-zinc-500 text-sm mt-6">Latency Performance: Cloud AI vs. Intercept Pipeline</p>
+        </section>
+    </main>
+
+    <footer class="bg-zinc-900 text-white py-12 px-6">
+        <div class="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center gap-8">
+            <div class="flex items-center gap-2">
+                <div class="w-8 h-8 bg-indigo-600 rounded-lg flex items-center justify-center text-white font-bold">I</div>
+                <span class="font-bold tracking-tight text-xl text-white">INTERCEPT</span>
+            </div>
+            <p class="text-zinc-500 text-sm">© 2026 Intercept AI Security. Confidential Enterprise Briefing.</p>
+        </div>
+    </footer>
+
+    <script>
+        // --- State Management ---
+        let isPlaying = false;
+        let riskChartInstance = null;
+        let synthesis = window.speechSynthesis;
+        let currentUtterance = null;
+        let scenarioStep = 0;
+
+        // --- Narration Script & Synced Events ---
+        const briefingScript = [
+            { 
+                text: "Welcome to the Intercept technical briefing. My name is the Intercept AI, and I will be guiding you through our cognitive security framework.", 
+                duration: 6000,
+                action: () => updateStatus("Introduction")
+            },
+            { 
+                text: "In 2026, financial fraud has shifted from hacking systems to hacking people. This is psychological compliance.", 
+                duration: 7000,
+                action: () => document.getElementById('contentBlock1').classList.add('sync-active')
+            },
+            { 
+                text: "To understand the threat, we've simulated a live digital arrest scam. Watch the Live Transcription feed below.", 
+                duration: 6000,
+                action: () => scrollToId('simulation')
+            },
+            { 
+                text: "Hello, am I speaking with the primary account holder? This is Officer John from the Federal Police.", 
+                isScam: true, 
+                speaker: "Scammer", 
+                risk: 35, 
+                marker: "Authority Bias" 
+            },
+            { 
+                text: "We have detected illegal activity linked to your social security number. Your bank account will be frozen immediately.", 
+                isScam: true, 
+                speaker: "Scammer", 
+                risk: 65, 
+                marker: "Urgency" 
+            },
+            { 
+                text: "To protect your funds, you must wire them to our safe government account right now. Do not hang up or you will be arrested.", 
+                isScam: true, 
+                speaker: "Scammer", 
+                risk: 98, 
+                marker: "Financial Request" 
+            },
+            { 
+                text: "Notice how the system detected the threat markers in real-time. By analyzing the intent, Intercept triggered a total lockdown before any money could be moved.", 
+                duration: 10000,
+                action: () => updateStatus("Analysis Complete")
+            }
+        ];
+
+        // --- UI Functions ---
+        function initAudioWave() {
+            const container = document.getElementById('waveContainer');
+            for(let i=0; i<20; i++) {
+                const bar = document.createElement('div');
+                bar.className = 'wave-bar';
+                bar.style.animationDelay = `${i * 0.1}s`;
+                container.appendChild(bar);
+            }
+        }
+
+        function updateStatus(txt) {
+            document.getElementById('statusLabel').innerText = txt;
+        }
+
+        function scrollToId(id) {
+            document.getElementById(id).scrollIntoView({ behavior: 'smooth' });
+        }
+
+        function initCharts() {
+            new Chart(document.getElementById('fraudScaleChart'), {
+                type: 'doughnut',
+                data: {
+                    labels: ['Social Engineering', 'Tech Support', 'Gov Impersonation', 'Other'],
+                    datasets: [{
+                        data: [45, 25, 20, 10],
+                        backgroundColor: ['#4f46e5', '#818cf8', '#a5b4fc', '#e4e4e7'],
+                        borderWidth: 0
+                    }]
+                },
+                options: { maintainAspectRatio: false, plugins: { legend: { position: 'bottom' } } }
+            });
+
+            new Chart(document.getElementById('latencyChart'), {
+                type: 'bar',
+                data: {
+                    labels: ['Audio Capture', 'Socket Transmit', 'STT Process', 'Intent Analysis', 'UI Update'],
+                    datasets: [
+                        { label: 'Standard AI (ms)', data: [300, 450, 1200, 800, 150], backgroundColor: '#e4e4e7' },
+                        { label: 'Intercept (ms)', data: [50, 40, 220, 180, 10], backgroundColor: '#4f46e5' }
+                    ]
+                },
+                options: { maintainAspectRatio: false }
+            });
+
+            const ctx = document.getElementById('riskGauge').getContext('2d');
+            riskChartInstance = new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    datasets: [{
+                        data: [0, 100],
+                        backgroundColor: ['#4f46e5', '#27272a'],
+                        borderWidth: 0,
+                        circumference: 270,
+                        rotation: 225
+                    }]
+                },
+                options: { cutout: '85%', maintainAspectRatio: false, plugins: { tooltip: { enabled: false }, legend: { display: false } } }
+            });
+        }
+
+        // --- Narration Logic ---
+        function populateVoices() {
+            const voices = synthesis.getVoices();
+            const select = document.getElementById('voiceSelect');
+            voices.forEach(voice => {
+                if(voice.lang.includes('en')) {
+                    const opt = document.createElement('option');
+                    opt.value = voice.name;
+                    opt.innerText = voice.name;
+                    select.appendChild(opt);
+                }
+            });
+        }
+
+        async function runBriefing() {
+            if(isPlaying) {
+                synthesis.cancel();
+                isPlaying = false;
+                document.getElementById('playIcon').innerText = '▶';
+                document.getElementById('waveContainer').classList.remove('playing');
+                return;
+            }
+
+            isPlaying = true;
+            document.getElementById('playIcon').innerText = '||';
+            document.getElementById('waveContainer').classList.add('playing');
+            document.getElementById('audioInterface').classList.add('sync-active');
+
+            for (let i = 0; i < briefingScript.length; i++) {
+                if(!isPlaying) break;
+                
+                const step = briefingScript[i];
+                if(step.action) step.action();
+
+                if(step.isScam) {
+                    await processSimulationStep(step);
+                } else {
+                    await speakText(step.text);
+                }
+            }
+            
+            isPlaying = false;
+            document.getElementById('playIcon').innerText = '▶';
+            document.getElementById('waveContainer').classList.remove('playing');
+        }
+
+        function speakText(text) {
+            return new Promise((resolve) => {
+                currentUtterance = new SpeechSynthesisUtterance(text);
+                const selectedVoice = document.getElementById('voiceSelect').value;
+                const voices = synthesis.getVoices();
+                if(selectedVoice) {
+                    currentUtterance.voice = voices.find(v => v.name === selectedVoice);
+                }
+                currentUtterance.rate = 1.0;
+                currentUtterance.pitch = 1.0;
+                currentUtterance.onend = () => resolve();
+                synthesis.speak(currentUtterance);
+            });
+        }
+
+        async function processSimulationStep(item) {
+            const transcriptBox = document.getElementById('transcriptBox');
+            const riskValueDisplay = document.getElementById('riskValueDisplay');
+            const threatStatus = document.getElementById('threatStatus');
+            const markerContainer = document.getElementById('markerContainer');
+            const riskPanel = document.getElementById('riskPanel');
+            const lockdownAlert = document.getElementById('lockdownAlert');
+            const bgGlow = document.getElementById('bgGlow');
+
+            // Add Transcript entry
+            const msg = document.createElement('div');
+            msg.className = `p-4 rounded-2xl max-w-[80%] bg-zinc-800 text-indigo-400 self-start border border-white/5`;
+            msg.innerHTML = `<span class="text-[10px] uppercase font-bold block mb-1 opacity-60">Sensing Threat...</span>${item.text}`;
+            transcriptBox.appendChild(msg);
+            transcriptBox.scrollTop = transcriptBox.scrollHeight;
+
+            // Update Risk
+            riskValueDisplay.innerText = item.risk;
+            riskChartInstance.data.datasets[0].data = [item.risk, 100 - item.risk];
+            riskChartInstance.data.datasets[0].backgroundColor = item.risk > 85 ? ['#ef4444', '#27272a'] : ['#4f46e5', '#27272a'];
+            riskChartInstance.update();
+
+            // Marker
+            const tag = document.createElement('span');
+            tag.className = 'px-3 py-1 bg-indigo-600/20 text-indigo-400 border border-indigo-600/30 rounded-full text-[10px] font-bold animate-pulse';
+            tag.innerText = item.marker;
+            markerContainer.appendChild(tag);
+
+            if(item.risk > 85) {
+                threatStatus.innerText = 'CRITICAL';
+                threatStatus.className = 'text-red-500 font-bold';
+                riskPanel.classList.add('strobe-alert');
+                lockdownAlert.classList.remove('hidden');
+                bgGlow.className = "absolute inset-0 bg-red-600/20 pointer-events-none transition-all duration-300";
+            }
+
+            // Speak the scam text
+            await speakText(item.text);
+        }
+
+        // --- Lifecycle ---
+        window.onload = () => {
+            initAudioWave();
+            initCharts();
+            if(synthesis.onvoiceschanged !== undefined) {
+                synthesis.onvoiceschanged = populateVoices;
+            } else {
+                populateVoices();
+            }
+        };
+
+        document.getElementById('playBtn').addEventListener('click', runBriefing);
+    </script>
+</body>
+</html>

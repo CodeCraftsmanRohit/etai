@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Intercept Pitch - Extended Voiceover Engine</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body { background-color: #09090b; color: #fafafa; font-family: system-ui, -apple-system, sans-serif; }
+        .speaking { color: #38bdf8; font-weight: bold; background: rgba(56, 189, 248, 0.1); border-left: 4px solid #38bdf8; padding-left: 1rem; border-radius: 0 8px 8px 0;}
+        .script-line { transition: all 0.3s ease; border-left: 4px solid transparent; padding-left: 1rem; }
+    </style>
+</head>
+<body class="p-8 max-w-4xl mx-auto">
+
+    <header class="mb-10 border-b border-zinc-800 pb-6">
+        <div class="flex items-center gap-3 mb-2">
+            <div class="w-8 h-8 bg-indigo-600 rounded flex items-center justify-center font-bold text-white">I</div>
+            <h1 class="text-2xl font-bold">Intercept Voiceover Engine (Extended)</h1>
+        </div>
+        <p class="text-zinc-400 text-sm">Select a voice, adjust the speed, and click play to hear the updated 4-minute script. Use this to time your screen recordings (PDF -> Live App transitions).</p>
+    </header>
+
+    <div class="sticky top-0 bg-[#09090b] py-4 z-10 border-b border-zinc-800 mb-8 flex flex-wrap gap-4 items-end shadow-md">
+        <div class="flex-1 min-w-[200px]">
+            <label class="block text-xs font-bold text-zinc-500 uppercase mb-2">1. Select AI Voice</label>
+            <select id="voiceSelect" class="w-full bg-zinc-900 border border-zinc-700 text-white p-2 rounded focus:ring-2 focus:ring-indigo-500 outline-none">
+                <option value="">Loading voices...</option>
+            </select>
+        </div>
+        
+        <div>
+            <label class="block text-xs font-bold text-zinc-500 uppercase mb-2">2. Pacing (Speed)</label>
+            <input type="range" id="rateSelect" min="0.5" max="1.5" value="1.0" step="0.1" class="w-32 accent-indigo-500">
+            <span id="rateValue" class="text-xs text-zinc-400 ml-2">1.0x</span>
+        </div>
+
+        <div class="flex gap-2">
+            <button id="playBtn" class="bg-indigo-600 hover:bg-indigo-500 text-white px-6 py-2 rounded font-bold transition-colors flex items-center gap-2 shadow-lg shadow-indigo-600/20">
+                <span>▶</span> Play Audio
+            </button>
+            <button id="stopBtn" class="bg-rose-600 hover:bg-rose-500 text-white px-4 py-2 rounded font-bold transition-colors hidden">
+                <span>■</span> Stop
+            </button>
+        </div>
+    </div>
+
+    <div id="scriptContainer" class="space-y-6 text-lg leading-relaxed text-zinc-300">
+        <!-- Script lines will be injected here by JS -->
+    </div>
+
+    <div class="mt-12 p-4 bg-zinc-900/50 rounded-lg border border-zinc-800">
+        <h3 class="text-indigo-400 font-bold mb-2">🎬 Video Editing Note</h3>
+        <p class="text-sm text-zinc-400">Remember to add the on-screen captions exactly as they are written in your <code class="text-indigo-300 bg-zinc-800 px-1 rounded">video_pitch_script.md</code> file for maximum accessibility and impact during judging.</p>
+    </div>
+
+    <script>
+        const scriptData = [
+            { time: "0:00", text: "                                                                                                                                                                           Last year, billions were stolen globally. Not through hacking, but through psychological manipulation. Welcome to the era of the 'Digital Arrest'." },
+            { time: "0:15", text: "Every day, vulnerable individuals lose their life savings. Scammers bypass digital security by socially engineering the victim directly over the phone." },
+            { time: "0:30", text: "Existing solutions are broken. Caller ID blockers are useless against spoofing, and bank alerts trigger only after the victim is panicked and compliant." },
+            { time: "0:45", text: "We designed Intercept: a zero-latency, passive AI listening shield. Instead of analyzing phone metadata, it analyzes human intent in real-time." },
+            { time: "1:00", text: "Our architecture captures audio in 3-second chunks, streaming via WebSockets to an in-memory Whisper and GPT-4o engine for deterministic risk scoring." },
+            { time: "1:15", text: "But slides are just theory. Let’s switch to the live web app and run a real simulation." },
+            { time: "1:30", text: "During a normal call, Intercept is completely invisible. You can see the live transcript generating here, calculating a baseline risk score of around 20." },
+            { time: "1:45", text: "The status is secure. But watch what happens when a scammer initiates a Police Impersonation script, using high-pressure tactics about money laundering." },
+            { time: "2:05", text: "Our intent model flags the coercion. In under 500 milliseconds, the risk score spikes to 99 percent, triggering an immediate, autonomous system lockdown." },
+            { time: "2:25", text: "A webhook is instantly fired to sever the call and freeze outbound transfers, saving the victim's life savings before a tragic mistake occurs." },
+            { time: "2:40", text: "Because this is strictly in-memory, zero audio is recorded, ensuring 100 percent privacy. Our aggressive roadmap targets native mobile integration by Q3." },
+            { time: "2:55", text: "Intercept doesn't just warn victims; it protects them when they can't protect themselves. Thank you." }
+        ];
+
+        const synth = window.speechSynthesis;
+        const voiceSelect = document.getElementById('voiceSelect');
+        const playBtn = document.getElementById('playBtn');
+        const stopBtn = document.getElementById('stopBtn');
+        const rateSelect = document.getElementById('rateSelect');
+        const container = document.getElementById('scriptContainer');
+        
+        let voices = [];
+        let currentUtteranceIndex = 0;
+        let isPlaying = false;
+
+        // Render script to UI
+        scriptData.forEach((line, index) => {
+            const div = document.createElement('div');
+            div.className = 'script-line flex gap-4 p-2';
+            div.id = `line-${index}`;
+            div.innerHTML = `
+                <div class="text-zinc-500 font-mono text-sm pt-1 w-12 shrink-0">${line.time}</div>
+                <div>${line.text}</div>
+            `;
+            container.appendChild(div);
+        });
+
+        function populateVoiceList() {
+            voices = synth.getVoices().filter(voice => voice.lang.includes('en'));
+            voiceSelect.innerHTML = '';
+            
+            // Sort to try and find premium/natural sounding voices first
+            const preferredVoices = voices.sort((a, b) => {
+                if(a.name.includes('Premium') || a.name.includes('Google') || a.name.includes('Siri') || a.name.includes('Natural')) return -1;
+                return 1;
+            });
+
+            preferredVoices.forEach((voice) => {
+                const option = document.createElement('option');
+                option.textContent = `${voice.name} (${voice.lang})`;
+                option.setAttribute('data-lang', voice.lang);
+                option.setAttribute('data-name', voice.name);
+                voiceSelect.appendChild(option);
+            });
+        }
+
+        populateVoiceList();
+        if (speechSynthesis.onvoiceschanged !== undefined) {
+            speechSynthesis.onvoiceschanged = populateVoiceList;
+        }
+
+        rateSelect.addEventListener('input', (e) => {
+            document.getElementById('rateValue').textContent = e.target.value + 'x';
+        });
+
+        function speakLine(index) {
+            if (index >= scriptData.length) {
+                resetUI();
+                return;
+            }
+
+            // Remove highlight from all
+            document.querySelectorAll('.script-line').forEach(el => el.classList.remove('speaking'));
+            
+            // Add highlight to current
+            const currentEl = document.getElementById(`line-${index}`);
+            currentEl.classList.add('speaking');
+            currentEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+
+            const textToSpeak = scriptData[index].text;
+            const utterThis = new SpeechSynthesisUtterance(textToSpeak);
+            
+            const selectedOption = voiceSelect.selectedOptions[0].getAttribute('data-name');
+            utterThis.voice = voices.find(v => v.name === selectedOption);
+            utterThis.rate = parseFloat(rateSelect.value);
+
+            utterThis.onend = () => {
+                if(isPlaying) speakLine(index + 1);
+            };
+
+            utterThis.onerror = (e) => {
+                console.error("SpeechSynthesisError", e);
+                resetUI();
+            };
+
+            synth.speak(utterThis);
+        }
+
+        function resetUI() {
+            isPlaying = false;
+            currentUtteranceIndex = 0;
+            document.querySelectorAll('.script-line').forEach(el => el.classList.remove('speaking'));
+            playBtn.classList.remove('hidden');
+            stopBtn.classList.add('hidden');
+        }
+
+        playBtn.addEventListener('click', () => {
+            if (synth.speaking) synth.cancel(); // Stop any current speech
+            isPlaying = true;
+            playBtn.classList.add('hidden');
+            stopBtn.classList.remove('hidden');
+            speakLine(0);
+        });
+
+        stopBtn.addEventListener('click', () => {
+            synth.cancel();
+            resetUI();
+        });
+
+        // Handle page visibility/unload to stop speaking
+        window.addEventListener('beforeunload', () => synth.cancel());
+    </script>
+</body>
+</html>
