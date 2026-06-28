@@ -13,7 +13,6 @@
     <img src="https://img.shields.io/badge/Version-1.0.0-orange.svg" alt="Version" />
   </p>
 
-  <img src="docs/hero.png" alt="Intercept Hero Image Placeholder" width="800" />
 </div>
 
 ---
@@ -140,12 +139,7 @@ sequenceDiagram
 
 ## 📸 Screenshots
 
-| Safe State | Scam Detected (Lockdown) |
-|:---:|:---:|
-| <img src="docs/safe_state.png" width="400" alt="Safe State Dashboard"> | <img src="docs/threat_state.png" width="400" alt="Scam Detected Dashboard"> |
-| *Passive monitoring with low risk score.* | *Autonomous intervention at >85% risk.* |
-
-*(Note: Replace placeholders with actual image paths)*
+*(Add screenshots of your application here)*
 
 ---
 
