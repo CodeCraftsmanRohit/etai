@@ -139,7 +139,9 @@ sequenceDiagram
 
 ## 📸 Screenshots
 
-*(Add screenshots of your application here)*
+| Safe State | Scam Detected (Lockdown) |
+|:---:|:---:|
+| <img src="docs/safe-state.png" width="400" alt="Safe State Dashboard"> | <img src="docs/alert-state.png" width="400" alt="Scam Detected Dashboard"> |
 
 ---
 
