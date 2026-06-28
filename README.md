@@ -151,8 +151,9 @@ sequenceDiagram
 
 ## 🚀 Demo
 
-- **Live Demo**: [https://intercept-demo.vercel.app](#) *(Placeholder)*
-- **Demo Video**: [YouTube / Loom Link](#) *(Placeholder)*
+- **Live Demo**: [https://etai-czwh.vercel.app](https://etai-czwh.vercel.app)
+- **Demo Video**: [Watch Demo Pitch](https://drive.google.com/file/d/1iN6ANYyNhBPkL9Jzp-CTOhOalI2IOvXZ/view?usp=sharing)
+- **GitHub Repo**: [CodeCraftsmanRohit/etai](https://github.com/CodeCraftsmanRohit/etai)
 
 ---
 
